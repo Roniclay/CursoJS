@@ -12,6 +12,12 @@ route.get('/login/index', loginController.index);
 //Criando registro
 route.post('/login/register', loginController.register);
 
+//Fazendo login
+route.post('/login/login', loginController.login);
+
+//Logout
+route.get('/login/logout',loginController.logout)
+
 
 
 

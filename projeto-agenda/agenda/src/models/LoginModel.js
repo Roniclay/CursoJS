@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const validator = require('validator');
+const bcryptjs = require('bcryptjs');
 
 const LoginSchema = new mongoose.Schema({
   email: { type: String, required: true },
@@ -15,33 +16,61 @@ class Login {
     this.user = null;
   }
 
-  async register () {
+  async login() {
     this.valida();
-    if(this.errors.length > 0) return;
+    if (this.errors.length > 0) return;
+    this.user = await LoginModel.findOne({ email: this.body.email });
 
-    try {
-      this.user = await LoginModel.create(this.body);
-    } catch (e) {
-      console.log(e);
-    }
+    if(!this.user){
+      this.errors.push('Usuário não existe.');
+      return;
+
+    } 
     
+    if(!bcryptjs.compareSync(this.body.password, this.user.password)){
+      this.errors.push('Senha inválida');
+      this.user = null;
+      return;
+    };
   }
 
-  valida () {
+  async register() {
+    this.valida();
+    if (this.errors.length > 0) return;
+
+    await this.userExists();
+
+    if (this.errors.length > 0) return;
+
+    const salt = bcryptjs.genSaltSync();
+    this.body.password = bcryptjs.hashSync(this.body.password, salt);
+
+    this.user = await LoginModel.create(this.body);
+
+    console.log(e);
+
+  }
+
+  async userExists() {
+    this.user = await LoginModel.findOne({ email: this.body.email });
+    if (this.user) this.errors.push('Esse usuário já existe');
+  }
+
+  valida() {
     this.cleanUp();
     //Validação dos campos
     //Email tem que ser válido
-    if(!validator.isEmail(this.body.email)) this.errors.push('Email Inválido');
+    if (!validator.isEmail(this.body.email)) this.errors.push('Email Inválido');
 
     //A senha precisa ter entre 3 e 50
 
-    if(this.body.password.length < 3 || this.body.password.length > 50) {
+    if (this.body.password.length < 3 || this.body.password.length > 50) {
       this.errors.push('A senha precisa ter entre 3 e 50 caracteres.');
     }
   }
 
   cleanUp() {
-    for(const key in this.body) {
+    for (const key in this.body) {
       if (typeof this.body[key] !== 'string') {
         this.body[key] = '';
       }
