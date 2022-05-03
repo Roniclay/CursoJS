@@ -47,7 +47,7 @@ class Login {
 
     this.user = await LoginModel.create(this.body);
 
-    console.log(e);
+
 
   }
 

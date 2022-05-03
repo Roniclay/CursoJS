@@ -24,6 +24,7 @@ exports.register = async function (req, res) {
             return res.redirect('/login/index');
         });
     } catch (e) {
+        console.log(e);
         return res.render('404');
     }
 
